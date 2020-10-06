@@ -1,9 +1,9 @@
 <?php
-namespace App\Controllers;
-
 /**
  * Manage default controller actions for all Controllers
  */
+ 
+namespace App\Controllers;
 
 use CodeIgniter\Controller;
 use App\Libraries\functions;
