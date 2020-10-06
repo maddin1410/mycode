@@ -124,15 +124,10 @@ class BaseModel
         }
         $sql .= ") WHERE id = " . $id;
 
-        //execute query and check result
-        $result = $this->_exec($sql);
-        if (true === $result)
-        {
-            return $this->_db->insertID();
-        }
-        return false;
+        //execute query
+        return $this->_exec($sql);
     }
-
+    
     /**
      * select from a single table by given params
      * 
