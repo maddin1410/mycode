@@ -1,1 +1,8 @@
+Hello,
 
+here are some code examples to easy manage a CodeIgniter 4 project by using Base Model and Controller. 
+The BaseModel in app/models holds Functionality to select/inser/update a single table. Table specifications are set in single Models. Here app/models/UserModel as an example.
+The BaseController in app/controllers manages the Template rendering. Needed models, libraries and helpers configured here. 
+This is for additinal functions all over the project, like check user rights or split tests.
+
+More detaile are not allowed to show in this public project.
