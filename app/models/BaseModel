@@ -108,7 +108,7 @@ class BaseModel
         $validData = $this->_validateData($data, $validRows, $stringRows);
 
         //create query
-        $sql = "UPDATE " . $table . " SET (";
+        $sql = "UPDATE " . $table . " SET ";
         $first = true;
         foreach ($validData as $key => $val)
         {
@@ -122,7 +122,7 @@ class BaseModel
             }
             $sql .= $key . " = " . $val;
         }
-        $sql .= ") WHERE id = " . $id;
+        $sql .= " WHERE id = " . $id;
 
         //execute query
         return $this->_exec($sql);
