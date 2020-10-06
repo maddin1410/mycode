@@ -1,0 +1,224 @@
+<?php
+/**
+ * Basic functions for all Models to manage table communication
+ */
+
+namespace App\Models;
+
+use \CodeIgniter\Model;
+use \CodeIgniter\Database\ConnectionInterface;
+
+class BaseModel
+{
+    
+    /*
+     * database object
+     */
+    protected $_db;
+
+    /**
+     * set basic configutation
+     */
+    public function __construct()
+    {
+        //connect to database
+        $this->_db = db_connect();
+    }
+
+    /**
+     * execute database query
+     *
+     * @param $sql
+     * @return mixed $result
+     */
+    protected function _exec($sql)
+    {
+        //execute query
+        $query = $this->_db->query($sql);
+        //check query result
+        if ($query)
+        {
+            $result = $query->getResult();
+            $resultID = $this->_db->resultID;
+
+            //return result Row(s) for select queries
+            if (isset($resultID->num_rows) && $resultID->num_rows > 0)
+            {
+                if (count($result) == 1)
+                {
+                    return $result[0];
+                }
+                else
+                {
+                    return $result;
+                }
+            }
+            //return updated or inserted row id
+            return $resultID;
+        }
+        else
+        {
+            //pront error if query not valid
+            echo '<pre>';
+            echo '<h2>Fehler beim ausführen des Queries: ' . $sql . '</h2>';
+            echo '</pre>';
+        }
+    }
+
+    /**
+     * add given data to given table
+     * 
+     * @param array $data, data to insert
+     * @param string $table, table to insert in
+     * @param array $validRows, all existing rownames of given table
+     * @param array $stringRows, rownames of given table with string values
+     * @return mixed, inserted id or false
+     */
+    public function insert($data, $table, $validRows, $stringRows = array())
+    {
+        //validate data
+        $validData = $this->_validateData($data, $validRows, $stringRows);
+
+        //create query
+        $sql = "INSERT INTO " . $table . " (" . implode(', ', array_keys($validData)) . ") 
+                VALUES (" . implode(', ', array_values($validData)) . ")";
+
+        //execute query and check result
+        $result = $this->_exec($sql);
+        if (true === $result)
+        {
+            return $this->_db->insertID();
+        }
+        return false;
+    }
+    
+    /**
+     * update given data in given table
+     * 
+     * @param array $data, data to update
+     * @param int $id, Id of row to update
+     * @param string $table, table to update
+     * @param array $validRows, all existing rownames of given table
+     * @param array $stringRows, rownames of given table with string values
+     * @return mixed, updated id or false
+     */
+    public function update($data, $id, $table, $validRows, $stringRows = array())
+    {
+        //validate data
+        $validData = $this->_validateData($data, $validRows, $stringRows);
+
+        //create query
+        $sql = "UPDATE " . $table . " SET (";
+        $first = true;
+        foreach ($validData as $key => $val)
+        {
+            if (!$first) 
+            {
+                $sql = ", ";
+            }
+            else
+            {
+                $first = false;
+            }
+            $sql .= $key . " = " . $val;
+        }
+        $sql .= ") WHERE id = " . $id;
+
+        //execute query and check result
+        $result = $this->_exec($sql);
+        if (true === $result)
+        {
+            return $this->_db->insertID();
+        }
+        return false;
+    }
+
+    /**
+     * select from a single table by given params
+     * 
+     * @param string $table, table to select from
+     * @param type $whereArray, conditions to search for
+     * @param array $validRows, all existing rownames of given table
+     * @param array $stringRows, rownames of given table with string values
+     * @param type $limit, selections linmit
+     * @param type $offset, selections offset
+     * @return mixed, result Rows or false
+     */
+    public function select($table, $whereArray, $validRows, $stringRows = array(), $limit = null, $offset = null)
+    {
+        $sql = " SELECT * FROM " . $table . " WHERE ";
+
+        $first = true;
+        foreach ($whereArray as $key => $val)
+        {
+            if (in_array($key, $validRows)) {
+                if (!$first) $sql .= ' AND ';
+                $first = false;
+                if (in_array($key, $stringRows)) $val = "'" . $val . "'";
+                $sql .= $key . " = " . $val;
+            }
+        }
+        if (!is_null($limit)) $sql .= " LIMIT " . $limit;
+        if (!is_null($offset)) $sql .= " OFFSET " . $offset;
+        return $this->_exec($sql);
+    }
+    
+    /**
+     * validate given data for row names mached given table row names
+     * 
+     * @param array $data, the keys are table rows
+     * @param array $validRows, all existing table rows to check for
+     * @param array $stringRows, string table rows, have to escaped
+     * @return array, validated data
+     */
+    protected function _validateData($data, $validRows, $stringRows)
+    {
+        $validData = array();
+
+        foreach ($data as $key => $val)
+        {
+            //check if key is valid
+            if (!in_array($key, $validRows)) exit('ERROR: No valid Row');
+            //check if value is a string and escape it if so
+            if (in_array($key, $stringRows)) $val = "'" . $val . "'";
+            $validData[$key] = $val;
+        }
+        
+        return $validData;
+    }
+    
+    /**
+     * remove all ' and " from given string
+     *
+     * @param $string
+     * @return string $string
+     */
+    protected function _removeSemis($string)
+    {
+        echo '<br /><br />String start: ' . $string;
+        while (substr_count($string, "'") > 0)
+        {
+            $string = str_replace("'", "", $string);
+        }
+
+        while (substr_count($string, '"') > 0)
+        {
+            $string = str_replace('"', '', $string);
+        }
+        echo '<br />String ende: ' . $string . '<br />';
+        return $string;
+    }
+
+    /**
+     * escape a string for database compatibility
+     *
+     * @param $string
+     * @return string|string[]
+     */
+    protected function _escapeString($string)
+    {
+        $res = str_replace("'", "\'", $string);
+
+        return $res;
+    }
+}
