@@ -1,0 +1,65 @@
+<?php
+namespace App\Controllers;
+
+/**
+ * Manage default controller actions for all Controllers
+ */
+
+use CodeIgniter\Controller;
+use App\Libraries\functions;
+use App\Models\UserModel;
+
+class BaseController extends Controller
+{
+    
+    /**
+     * 
+     * array for autoloaded helpers
+     */
+    protected $_helpers = [];
+
+    /**
+     * library with mixed helper function
+     */
+    protected $_functions;
+
+    /**
+     * models
+     */
+    public $userModel;
+
+    /**
+     * Constructor
+     */
+    public function initController(\CodeIgniter\HTTP\RequestInterface $request, \CodeIgniter\HTTP\ResponseInterface $response, \Psr\Log\LoggerInterface $logger)
+    {
+        // load codeigniter controller default settings
+        parent::initController($request, $response, $logger);
+        
+        //load helpers
+        $this->_helpers = array_merge($this->helpers, ['url', 'form', 'session']);
+
+        //load models
+        $this->userModel = new UserModel();
+        
+        //load libraries
+        $this->_functions = new functions();
+
+        //initial session
+        $session = session();
+    }
+
+
+    /**
+     * render header, footer and given view with given data
+     *
+     * @param string $view, the view to render
+     * @param array $data, needed data for given view
+     **/
+    public function template($view, $data = array())
+    {
+        echo view('header');
+        echo view($view, $data);
+        echo view('footer');
+    }
+}
