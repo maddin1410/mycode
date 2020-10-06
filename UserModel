@@ -1,0 +1,128 @@
+<?php
+/**
+ * Manage database transaction for table user
+ */
+
+namespace App\Models;
+
+
+class UserModel extends BaseModel
+{
+    /*
+     * Table to use
+     */
+    protected $_table = 'user';
+
+    /*
+     * valid fields in table $_table
+     */
+    protected $_validRows = array('email',
+                                'username',
+                                'password',
+                                'postal',
+                                'hash',
+                            );
+
+    /*
+     * string fields in table $_table
+     */
+    protected $_stringRows = array('email',
+                                'username',
+                                'password',
+                                'postal',
+                                'hash',
+                            );
+
+    public function __construct()
+    {
+        parent::__construct();
+    }
+
+    /**
+     * fetch a user row by its id
+     * 
+     * @param int $id, id of user to select
+     * @return mixed, user row or false
+     */
+    public function getById($id)
+    {
+        $whereArray = array('id' => $id);
+        return $this->select($this->_table, $whereArray, $this->_validRows, $this->_stringRows, 1);
+    }
+
+    /**
+     * insert a new user row
+     *
+     * @param array $data, array with data to insert
+     * @return mixed, id of new users row or false
+     */
+    public function insertUser($data)
+    {
+        $result = $this->insert($data, $this->_table, $this->_validRows, $this->_stringRows);
+        return $this->getById($result);
+    }
+
+    /**
+     * update a user
+     *
+     * @param array $data, array with data to update
+     * @param int $auto, id to update
+     * @return mixed, 
+     */
+    public function updateUser($data, $id)
+    {
+        return $this->update($data, $id, $this->_table, $this->_validRows, $this->_stringRows);
+    }
+
+    /**
+     * fetch all users
+     *
+     * @return mixed, user rows or false
+     */
+    public function getUsers()
+    {
+        return $this->select($this->_table, array(), $this->_validRows, $this->_stringRows);
+    }
+
+    /**
+     * search user
+     *
+     * @param array $data, array with one of the table colnames and a value to search for
+     *
+     * @return array
+     */
+    public function getUserBy($data)
+    {
+        return $this->select($this->_table, $data, $this->_validRows, $this->_stringRows);
+    }
+    
+    /**
+     * check if given hash is correct
+     * 
+     * @param type $userId
+     * @param type $hash
+     * @return boolean|int
+     */
+    public function checkHash($userId, $hash)
+    {
+        $user = $this->getById($userId);
+        
+        //user not found
+        if (false === $user) return false;
+        
+        //userhash allready checked
+        if ($user->hash == 1) return 2;
+        
+        //userhash correct
+        if  ($user->hash == $hash)
+        {
+            $updateData = array('hash' => 1);
+            $this->updateUser($updateData, $user);
+            return 1;
+        }
+        
+        //hash not correct
+        return false;
+    }
+
+}
